@@ -75,10 +75,10 @@ st.sidebar.title("🍶 생명의물")
 st.sidebar.markdown("취향 기반 술 추천 바")
 
 # 메인 타이틀
-st.image("ap/images/0_LiqureMate.png")
+st.image("app/images/0_LiqureMate.png")
 # st.title("🍶 생명의물")
 st.markdown("### 취향으로 찾아가는, 나만의 한 잔")
-st.image("ap/images/2_MainBanner.png")
+st.image("app/images/2_MainBanner.png")
 
 st.markdown(
     """
