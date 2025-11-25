@@ -2,6 +2,8 @@ import streamlit as st
 import streamlit.components.v1 as components
 import requests
 import uuid
+from pathlib import Path
+
 
 # GA 공통 유틸
 try:
@@ -59,11 +61,15 @@ def send_ga_event(event_name: str, params: dict | None = None):
         timeout=2,
     )
 
+BASE_DIR = Path(__file__).resolve().parent
+def img(path):
+    return BASE_DIR / "images" / path
+
 
 # 페이지 기본 설정
 st.set_page_config(
     page_title="생명의물",
-    page_icon="app/images/1_SiteLogo.png",
+    page_icon=img("1_SiteLogo.png"),
     layout="centered"
 )
 
@@ -75,10 +81,10 @@ st.sidebar.title("🍶 생명의물")
 st.sidebar.markdown("취향 기반 술 추천 바")
 
 # 메인 타이틀
-st.image("app/images/0_LiqureMate.png")
+st.image(img("0_LiqureMate.png"))
 # st.title("🍶 생명의물")
 st.markdown("### 취향으로 찾아가는, 나만의 한 잔")
-st.image("app/images/2_MainBanner.png")
+st.image(img("2_MainBanner.png"))
 
 st.markdown(
     """
@@ -120,8 +126,7 @@ with col1:
     )
 
 with col2:
-    st.image(
-        "app/images/mainpage_warehouse.png",
+    st.image(img("mainpage_warehouse.png"),
         caption="당신의 취향에 맞는 한 잔을 찾는 공간, 생명의물"
     )
 

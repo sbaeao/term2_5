@@ -5,7 +5,7 @@ import os
 import requests
 import uuid
 
-# 🔥 GA 공통 유틸
+# GA 공통 유틸
 try:
     GA_ID = st.secrets["ga"]["measurement_id"]
     GA_API_SECRET = st.secrets["ga"]["api_secret"]
@@ -65,7 +65,7 @@ def send_ga_event(event_name: str, params: dict | None = None):
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 csv_path = os.path.join(base_dir, "data", "survey_results.csv")
 
-# 🔥 GA page_view: stats + 이벤트
+# GA page_view: stats + 이벤트
 inject_ga("stats")
 
 try:
