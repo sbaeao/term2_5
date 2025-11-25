@@ -121,8 +121,7 @@ with col1:
 
 with col2:
     st.image(
-        "app
-/images/mainpage_warehouse.png",
+        "app/images/mainpage_warehouse.png",
         caption="당신의 취향에 맞는 한 잔을 찾는 공간, 생명의물"
     )
 
