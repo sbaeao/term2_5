@@ -5,7 +5,9 @@ import uuid
 from pathlib import Path
 
 
-# GA 공통 유틸
+# -----------------------------
+# GA 설정
+# -----------------------------
 try:
     GA_ID = st.secrets["ga"]["measurement_id"]
     GA_API_SECRET = st.secrets["ga"]["api_secret"]
@@ -15,19 +17,27 @@ except Exception:
 
 
 def inject_ga(page_name: str):
+    """
+    Google Analytics page_view 삽입
+    Streamlit Home 페이지는 반드시 page_path="/" 이어야 정상 인식됨.
+    """
     if not GA_ENABLED:
         return
+
+    # Home page → "/"
+    page_path = "/" if page_name == "home" else f"/{page_name}"
 
     ga_js = f"""
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
-      function gtag(){{dataLayer.push(arguments);}}
+      function gtag(){{dataLayer.push(arguments);}};
+
       gtag('js', new Date());
       gtag('config', '{GA_ID}', {{
         'page_title': '{page_name}',
-        'page_path': '/{page_name}'
+        'page_path': '{page_path}'
       }});
     </script>
     """
@@ -35,6 +45,9 @@ def inject_ga(page_name: str):
 
 
 def send_ga_event(event_name: str, params: dict | None = None):
+    """
+    GA 커스텀 이벤트 전송
+    """
     if not GA_ENABLED:
         return
 
@@ -61,28 +74,38 @@ def send_ga_event(event_name: str, params: dict | None = None):
         timeout=2,
     )
 
+
+# -----------------------------
+# 이미지 경로 설정
+# -----------------------------
 BASE_DIR = Path(__file__).resolve().parent
+
 def img(path):
     return BASE_DIR / "images" / path
 
 
+# -----------------------------
 # 페이지 기본 설정
+# -----------------------------
 st.set_page_config(
     page_title="생명의물",
     page_icon=img("1_SiteLogo.png"),
     layout="centered"
 )
 
-# GA page_view: main
-inject_ga("main")
+# GA page_view 등록
+inject_ga("home")
 
+# -----------------------------
 # 사이드바
+# -----------------------------
 st.sidebar.title("🍶 생명의물")
 st.sidebar.markdown("취향 기반 술 추천 바")
 
-# 메인 타이틀
+# -----------------------------
+# 메인 타이틀 섹션
+# -----------------------------
 st.image(img("0_LiqureMate.png"))
-# st.title("🍶 생명의물")
 st.markdown("### 취향으로 찾아가는, 나만의 한 잔")
 st.image(img("2_MainBanner.png"))
 
@@ -94,7 +117,9 @@ st.markdown(
     """
 )
 
-# 메인 히어로 섹션 (이미지 + 설명)
+# -----------------------------
+# 소개 섹션 (왼쪽 이미지 + 설명)
+# -----------------------------
 col1, col2 = st.columns([1.3, 1])
 
 with col1:
@@ -121,18 +146,21 @@ with col1:
         ---
 
         **간단한 설문을 통해 당신의 맛·향·도수·분위기 취향을 파악**한 뒤,  
-        그 결과를 바탕으로 우리의 공간인 **생명의 물**에서 다양한 술을 경험해볼 수 있습니다.
+        그 결과를 바탕으로 우리의 공간인 **생명의물**에서 다양한 술을 경험해볼 수 있습니다.
         """
     )
 
 with col2:
-    st.image(img("mainpage_warehouse.png"),
+    st.image(
+        img("mainpage_warehouse.png"),
         caption="당신의 취향에 맞는 한 잔을 찾는 공간, 생명의물"
     )
 
 st.markdown("---")
 
-# 소개 섹션: 이용 흐름
+# -----------------------------
+# 이용 방법
+# -----------------------------
 st.subheader("🗺 어떻게 이용하나요?")
 
 col_a, col_b, col_c = st.columns(3)
@@ -162,7 +190,7 @@ with col_b:
 with col_c:
     st.markdown(
         """
-        ### 3. 우리의  공간에서 실제로 즐기기  
+        ### 3. 우리 공간에서 실제로 즐기기  
         - 추천 결과를 바탕으로  
           **매장에서 한 잔 시음**  
         - 메뉴 선택이 어렵다면  
@@ -172,7 +200,9 @@ with col_c:
 
 st.markdown("---")
 
-# Call To Action 섹션 + 설문 페이지로 이동 버튼
+# -----------------------------
+# CTA: 설문 이동 버튼
+# -----------------------------
 st.subheader("🍸 지금, 나에게 맞는 술을 찾으러 가볼까요?")
 
 st.markdown(
@@ -182,10 +212,7 @@ st.markdown(
     """
 )
 
-# survey_url = "/page=01_survey"  # 예: pages/01_survey.py 파일일 때 보통 이렇게 됨
-
-# background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 40%, #f6d365 100%);
-
+# 버튼 스타일
 st.markdown(
     """
     <style>
@@ -228,9 +255,8 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# 🔹 실제 버튼 + 페이지 이동
+# 버튼 클릭 → 설문 페이지로 이동
 clicked = st.button("🍸 나에게 맞는 술 찾기")
 
 if clicked:
-    # 설문 페이지 파일명이 pages/01_survey.py 라고 가정
     st.switch_page("pages/01_survey.py")
