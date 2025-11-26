@@ -1,6 +1,6 @@
 import streamlit as st
 import streamlit.components.v1 as components
-import requests
+import requestspip
 import uuid
 from pathlib import Path
 
@@ -234,67 +234,3 @@ clicked = st.button("🍸 나에게 맞는 술 찾기")
 if clicked:
     # 설문 페이지 파일명이 pages/01_survey.py 라고 가정
     st.switch_page("pages/01_survey.py")
-
-
-# st.markdown(
-#     f"""
-#     <style>
-#     .pulse-button {{
-#         display: inline-flex;
-#         align-items: center;
-#         justify-content: center;
-#         padding: 18px 40px;
-#         border-radius: 999px;
-#         background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 40%, #f6d365 100%);
-#         color: #ffffff;
-#         font-size: 22px;
-#         font-weight: 700;
-#         text-decoration: none;
-#         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18);
-#         border: none;
-#         cursor: pointer;
-#         animation: pulse 1.5s infinite;
-#         transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
-#     }}
-#     .pulse-button span.icon {{
-#         font-size: 32px;
-#         margin-right: 10px;
-#     }}
-#     .pulse-button:hover {{
-#         transform: translateY(-3px) scale(1.03);
-#         box-shadow: 0 14px 26px rgba(0, 0, 0, 0.22);
-#     }}
-#     @keyframes pulse {{
-#         0% {{
-#             transform: scale(1);
-#             box-shadow: 0 0 0 0 rgba(255, 154, 158, 0.7);
-#         }}
-#         70% {{
-#             transform: scale(1.05);
-#             box-shadow: 0 0 0 18px rgba(255, 154, 158, 0);
-#         }}
-#         100% {{
-#             transform: scale(1);
-#             box-shadow: 0 0 0 0 rgba(255, 154, 158, 0);
-#         }}
-#     }}
-#     </style>
-
-#     <div style="text-align: center; margin-top: 32px; margin-bottom: 16px;">
-#         <a href="{survey_url}" class="pulse-button" target="_self">
-#             <span class="icon">🍸</span>
-#             <span>나에게 맞는 술 찾기</span>
-#         </a>
-#     </div>
-#     """,
-#     unsafe_allow_html=True
-# )
-#Survey Link
-# '''
-# st.page_link(
-#     "pages/01_survey.py",
-#     label="✨ 나에게 맞는 술 찾기",
-#     icon="🍸",
-#     use_container_width=True,
-# )
-# '''

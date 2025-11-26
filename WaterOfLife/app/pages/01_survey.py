@@ -1,6 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
+from pathlib import Path
 from datetime import datetime
 import os
 import requests
@@ -14,6 +15,11 @@ try:
 except Exception:
     GA_ENABLED = False
 
+ROOT_DIR = Path(__file__).resolve().parents[2]   # term2_5/
+DATA_DIR = ROOT_DIR / "data"
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+CSV_PATH = DATA_DIR / "survey_results.csv"
 
 def inject_ga(page_name: str):
     if not GA_ENABLED:
@@ -326,8 +332,9 @@ def get_recommendation_copy(category: str):
 
 def save_result(companion, mood, abv, taste_pref, food, recommended):
     """
-    통계용으로 쓰기 위한 CSV 저장
+    통계용으로 쓰기 위한 CSV 저장 (stats 페이지와 동일 경로 사용)
     """
+
     data = {
         "timestamp": [datetime.now().isoformat()],
         "companion": [companion],
@@ -337,18 +344,17 @@ def save_result(companion, mood, abv, taste_pref, food, recommended):
         "food": [food],
         "recommended": [recommended],
     }
+
     df_new = pd.DataFrame(data)
 
-    os.makedirs("data", exist_ok=True)
-    csv_path = os.path.join("data", "survey_results.csv")
-
-    if os.path.exists(csv_path):
-        df_old = pd.read_csv(csv_path)
+    # 기존 파일이 있으면 불러와 병합
+    if CSV_PATH.exists():
+        df_old = pd.read_csv(CSV_PATH)
         df_all = pd.concat([df_old, df_new], ignore_index=True)
     else:
         df_all = df_new
 
-    df_all.to_csv(csv_path, index=False)
+    df_all.to_csv(CSV_PATH, index=False)
 
 
 if submitted:

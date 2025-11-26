@@ -4,6 +4,7 @@ import pandas as pd
 import os
 import requests
 import uuid
+from pathlib import Path
 
 # GA 공통 유틸
 try:
@@ -13,6 +14,12 @@ try:
 except Exception:
     GA_ENABLED = False
 
+ROOT_DIR = Path(__file__).resolve().parents[2]
+
+DATA_DIR = ROOT_DIR / "data"
+DATA_DIR.mkdir(parents=True, exist_ok=True)  # data 폴더 없으면 자동 생성
+
+CSV_PATH = DATA_DIR / "survey_results.csv"
 
 def inject_ga(page_name: str):
     if not GA_ENABLED:
@@ -62,9 +69,6 @@ def send_ga_event(event_name: str, params: dict | None = None):
     )
 
 
-base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-csv_path = os.path.join(base_dir, "data", "survey_results.csv")
-
 # GA page_view: stats + 이벤트
 inject_ga("stats")
 
@@ -85,14 +89,12 @@ st.markdown("#### 지금까지 설문에 참여한 사람들의 취향 데이터
 st.markdown("---")
 
 
-# 데이터 존재 여부 체크
-if not os.path.exists(csv_path):
+if not CSV_PATH.exists():
     st.warning("아직 설문 데이터가 없습니다. 먼저 설문을 제출해 주세요!")
     st.page_link("pages/01_survey.py", label="🍸 설문하러 가기", icon="🍸")
     st.stop()
 
-# 데이터 로드
-df = pd.read_csv(csv_path)
+df = pd.read_csv(CSV_PATH)
 
 # 기본 정보 정리
 total_count = len(df)
