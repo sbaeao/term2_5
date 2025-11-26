@@ -2,8 +2,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
 from pathlib import Path
-from datetime import datetime
-import os
+from datetime import datetime  
 import requests
 import uuid
 
@@ -21,23 +20,29 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 CSV_PATH = DATA_DIR / "survey_results.csv"
 
+
 def inject_ga(page_name: str):
     if not GA_ENABLED:
         return
 
-    ga_js = f"""
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){{dataLayer.push(arguments);}}
-      gtag('js', new Date());
-      gtag('config', '{GA_ID}', {{
-        'page_title': '{page_name}',
-        'page_path': '/{page_name}'
-      }});
-    </script>
-    """
+    ga_js = (
+        """
+        <!-- Google tag (gtag.js) -->
+        """
+        + '<script async src="https://www.googletagmanager.com/gtag/js'
+        + f'?id={GA_ID}"></script>\n'
+        + f"""
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){{dataLayer.push(arguments);}}
+          gtag('js', new Date());
+          gtag('config', '{GA_ID}', {{
+            'page_title': '{page_name}',
+            'page_path': '/{page_name}'
+          }});
+        </script>
+        """
+    )
     components.html(ga_js, height=0)
 
 
@@ -68,7 +73,6 @@ def send_ga_event(event_name: str, params: dict | None = None):
         timeout=2,
     )
 
-# GA page_view: survey
 inject_ga("survey")
 
 st.title("🍸 나에게 맞는 술 추천")
@@ -101,7 +105,8 @@ st.markdown(
         justify-content: center;
         padding: 18px 40px;
         border-radius: 999px;
-        background: linear-gradient(135deg, #4f71ff 0%, #6cc6ff 50%, #90e0ff 100%);
+        background: linear-gradient(135deg, #4f71ff 0%,
+            #6cc6ff 50%, #90e0ff 100%);
         color: #ffffff !important;
         font-size: 20px;
         font-weight: 700;

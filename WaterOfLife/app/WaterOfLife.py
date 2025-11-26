@@ -56,8 +56,6 @@ def inject_ga(page_name: str):
     </script>
     """
     components.html(ga_js, height=0)
-
-
 def send_ga_event(event_name: str, params: dict | None = None):
     """
     GA4 Measurement Protocol로 커스텀 이벤트 전송
@@ -88,13 +86,41 @@ def send_ga_event(event_name: str, params: dict | None = None):
         json=payload,
         timeout=2,
     )
+def send_page_view(page_name: str):
+    if not GA_ENABLED:
+        return
+
+    params = {
+        "page_title": page_name,
+        "page_location": "https://dima-term2-5.streamlit.app/",
+        "page_path": "/"
+    }
+
+    payload = {
+        "client_id": str(uuid.uuid4()),
+        "events": [
+            {
+                "name": "page_view",
+                "params": params,
+            }
+        ],
+    }
+
+    requests.post(
+        "https://www.google-analytics.com/mp/collect",
+        params={
+            "measurement_id": GA_ID,
+            "api_secret": GA_API_SECRET,
+        },
+        json=payload,
+        timeout=2,
+    )
 
 
 # -----------------------------
 # 이미지 경로 설정
 # -----------------------------
 BASE_DIR = Path(__file__).resolve().parent
-
 
 def img(path: str) -> Path:
     return BASE_DIR / "images" / path
@@ -111,7 +137,7 @@ st.set_page_config(
 
 # 🔥 GA page_view: home (메인)
 inject_ga("home")
-
+send_page_view("home")
 # -----------------------------
 # 사이드바
 # -----------------------------
