@@ -4,7 +4,6 @@ import requests
 import uuid
 from pathlib import Path
 
-
 # -----------------------------
 # GA 설정
 # -----------------------------
@@ -18,14 +17,20 @@ except Exception:
 
 def inject_ga(page_name: str):
     """
-    Google Analytics page_view 삽입
-    Streamlit Home 페이지는 반드시 page_path="/" 이어야 정상 인식됨.
+    Google Analytics 4 page_view 삽입
+
+    - gtag.js 로드
+    - send_page_view 자동 전송 끄고
+    - 명시적으로 page_view 이벤트 한 번 쏴줌
+    - home은 page_path="/", 나머지는 "/{page_name}"
     """
     if not GA_ENABLED:
         return
 
-    # Home page → "/"
-    page_path = "/" if page_name == "home" else f"/{page_name}"
+    if page_name == "home":
+        page_path = "/"
+    else:
+        page_path = f"/{page_name}"
 
     ga_js = f"""
     <!-- Google tag (gtag.js) -->
@@ -34,10 +39,19 @@ def inject_ga(page_name: str):
       window.dataLayer = window.dataLayer || [];
       function gtag(){{dataLayer.push(arguments);}};
 
+      // GA 초기화
       gtag('js', new Date());
+
+      // 기본 config (자동 page_view 비활성화)
       gtag('config', '{GA_ID}', {{
+        'send_page_view': false
+      }});
+
+      // 수동 page_view 이벤트 전송
+      gtag('event', 'page_view', {{
         'page_title': '{page_name}',
-        'page_path': '{page_path}'
+        'page_path': '{page_path}',
+        'page_location': window.location.href
       }});
     </script>
     """
@@ -46,7 +60,8 @@ def inject_ga(page_name: str):
 
 def send_ga_event(event_name: str, params: dict | None = None):
     """
-    GA 커스텀 이벤트 전송
+    GA4 Measurement Protocol로 커스텀 이벤트 전송
+    (stats_viewed, survey_completed 등)
     """
     if not GA_ENABLED:
         return
@@ -80,7 +95,8 @@ def send_ga_event(event_name: str, params: dict | None = None):
 # -----------------------------
 BASE_DIR = Path(__file__).resolve().parent
 
-def img(path):
+
+def img(path: str) -> Path:
     return BASE_DIR / "images" / path
 
 
@@ -90,10 +106,10 @@ def img(path):
 st.set_page_config(
     page_title="생명의물",
     page_icon=img("1_SiteLogo.png"),
-    layout="centered"
+    layout="centered",
 )
 
-# GA page_view 등록
+# 🔥 GA page_view: home (메인)
 inject_ga("home")
 
 # -----------------------------
@@ -118,7 +134,7 @@ st.markdown(
 )
 
 # -----------------------------
-# 소개 섹션 (왼쪽 이미지 + 설명)
+# 소개 섹션 (좌: 설명, 우: 이미지)
 # -----------------------------
 col1, col2 = st.columns([1.3, 1])
 
@@ -153,13 +169,13 @@ with col1:
 with col2:
     st.image(
         img("mainpage_warehouse.png"),
-        caption="당신의 취향에 맞는 한 잔을 찾는 공간, 생명의물"
+        caption="당신의 취향에 맞는 한 잔을 찾는 공간, 생명의물",
     )
 
 st.markdown("---")
 
 # -----------------------------
-# 이용 방법
+# 이용 방법 섹션
 # -----------------------------
 st.subheader("🗺 어떻게 이용하나요?")
 
@@ -201,7 +217,7 @@ with col_c:
 st.markdown("---")
 
 # -----------------------------
-# CTA: 설문 이동 버튼
+# CTA: 설문 페이지로 이동
 # -----------------------------
 st.subheader("🍸 지금, 나에게 맞는 술을 찾으러 가볼까요?")
 
@@ -252,7 +268,7 @@ st.markdown(
     }
     </style>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
 
 # 버튼 클릭 → 설문 페이지로 이동
