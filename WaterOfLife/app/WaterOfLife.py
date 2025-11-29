@@ -1,8 +1,7 @@
 from pathlib import Path
 import pandas as pd
-import time
+from datetime import datetime  
 import streamlit as st
-
 from page_counter import increase_page_view
 increase_page_view("홈")
 ROOT_DIR = Path(__file__).resolve().parents[2] 
@@ -11,29 +10,22 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 EVENT_CSV = DATA_DIR / "events.csv"
 
-
 def log_event(event_name: str):
-    """events.csv에 이벤트를 기록"""
-
-    if "user_id" not in st.session_state:
-        st.session_state["user_id"] = st.session_state.get("client_id", "unknown")
-
-    client_id = st.session_state["user_id"]
-    timestamp = int(time.time())
-
-    new_row = pd.DataFrame([{
-        "event": event_name,
-        "client_id": client_id,
-        "timestamp": timestamp,
-    }])
-
+    CLIENT_ID = st.session_state["client_id"]
+    df_new = pd.DataFrame({
+        "timestamp": [datetime.now().isoformat()],
+        "client_id": [CLIENT_ID],   # 🔥 누가 했는지
+        "event": [event_name],      # "survey_completed" / "stats_viewed"
+    })
     if EVENT_CSV.exists():
-        df = pd.read_csv(EVENT_CSV)
-        df = pd.concat([df, new_row], ignore_index=True)
+        df_old = pd.read_csv(EVENT_CSV)
+        df_all = pd.concat([df_old, df_new], ignore_index=True)
     else:
-        df = new_row
+        df_all = df_new
 
-    df.to_csv(EVENT_CSV, index=False)
+    df_all.to_csv(EVENT_CSV, index=False)
+
+
 # -----------------------------
 # 이미지 경로 설정
 # -----------------------------
@@ -52,9 +44,9 @@ st.set_page_config(
     layout="centered",
 )
 
-if "home_logged" not in st.session_state:
+if "home_logged_" not in st.session_state:
     log_event("home_viewed")
-    st.session_state["home_logged"] = True
+    st.session_state["home_logged_"] = True
 
 
 
