@@ -40,14 +40,14 @@ if "view_logged_stats" not in st.session_state:
 
 
 # ============================================================
-# 5) UI 시작
+#  UI 시작
 # ============================================================
 st.title("📊 생명의물 취향 통계")
 st.markdown("#### 지금까지 설문에 참여한 사람들의 취향 데이터를 모아봤어요.")
 st.markdown("---")
 
 # ============================================================
-# 6) 페이지별 조회수
+# 페이지별 조회수
 # ============================================================
 st.subheader("📈 페이지별 조회수")
 
@@ -68,33 +68,21 @@ st.markdown("---")
 
 
 # ============================================================
-# 7) 전환율 계산
+# 전환율 계산
 # ============================================================
 if EVENT_CSV.exists():
     events = pd.read_csv(EVENT_CSV)
 
-    survey_clients = set(events.loc[events["event"] == "survey_completed", "client_id"])
-    stats_clients = set(events.loc[events["event"] == "stats_viewed", "client_id"])
-
-    total_survey = len(survey_clients)
-    total_stats = len(survey_clients & stats_clients)
-
-    conversion_rate = (total_stats / total_survey * 100) if total_survey > 0 else 0.0
-
-    st.markdown(
-        f"""
-        ### 🔁 설문 → 통계 페이지 전환율
-
-        - 설문 완료 세션 수: **{total_survey}**
-        - 통계 페이지까지 온 세션 수: **{total_stats}**
-        - 전환율: **{conversion_rate:.1f}%**
-        """
-    )
 else:
     st.info("아직 이벤트 데이터가 없습니다. 설문/통계 페이지를 이용해 주세요.")
     st.stop()
 
-st.subheader("1. 유입 → 설문 → 통계 흐름 분석 (Funnel)")
+if "timestamp" in events.columns:
+    events["timestamp"] = pd.to_datetime(events["timestamp"])
+else:
+    st.warning("⚠ events.csv에 'timestamp' 컬럼이 없어 시간대/재방문 통계가 제한될 수 있습니다.")
+
+st.subheader("🔁 유입 → 설문 → 통계 흐름 분석 (Funnel)")
 st.markdown("`client_id` 기준으로 설문 완료 후 통계 페이지까지 도달한 비율을 계산합니다.")
 
 # 유입 세션: events에 등장한 client_id 전체
@@ -111,7 +99,7 @@ def ratio(part, whole):
     return (part / whole * 100) if whole > 0 else 0.0
 
 funnel_data = [
-    {"단계": "유입(이벤트 발생 세션)", "세션 수": total_inflow, "전 단계 대비 전환율(%)": 100.0},
+    {"단계": "유입(홈)", "세션 수": total_inflow, "전 단계 대비 전환율(%)": 100.0},
     {"단계": "설문 완료", "세션 수": total_survey, "전 단계 대비 전환율(%)": ratio(total_survey, total_inflow)},
     {"단계": "통계 페이지 방문", "세션 수": total_stats, "전 단계 대비 전환율(%)": ratio(total_stats, total_survey)},
 ]
@@ -121,6 +109,61 @@ st.dataframe(df_funnel, width="stretch")
 
 st.bar_chart(df_funnel.set_index("단계")["세션 수"])
 st.markdown("---")
+
+# 체류시간 분포
+st.subheader("설문 완료 → 통계 페이지 진입까지 소요 시간 분포")
+
+if "timestamp" in events.columns:
+    # 설문 완료 & 통계 방문이 모두 있는 client만 대상
+    survey_ev = events[events["event"] == "survey_completed"][["client_id", "timestamp"]]
+    stats_ev = events[events["event"] == "stats_viewed"][["client_id", "timestamp"]]
+
+    # 각 client_id별 최초 설문 완료 시각, 최초 통계 방문 시각
+    survey_first = survey_ev.groupby("client_id")["timestamp"].min()
+    stats_first = stats_ev.groupby("client_id")["timestamp"].min()
+
+    joined = (
+        pd.concat(
+            [
+                survey_first.rename("survey_time"),
+                stats_first.rename("stats_time"),
+            ],
+            axis=1
+        )
+        .dropna()  # 둘 다 있는 client만
+    )
+
+    if not joined.empty:
+        joined["diff_sec"] = (joined["stats_time"] - joined["survey_time"]).dt.total_seconds()
+        joined["diff_min"] = joined["diff_sec"] / 60
+
+        st.write(f"분석 대상 세션 수: **{len(joined)}**")
+
+        st.subheader("요약 통계")
+        st.dataframe(
+            joined["diff_min"].describe()[["count", "mean", "50%", "max"]]
+            .rename({"count": "개수", "mean": "평균(분)", "50%": "중앙값(분)", "max": "최대(분)"})
+            .to_frame("값"),
+            width="stretch",
+        )
+
+        # 간단한 히스토그램용 bin
+        bins = [0, 1, 3, 5, 10, 30, 60, 9999]
+        labels = ["0~1분", "1~3분", "3~5분", "5~10분", "10~30분", "30~60분", "60분 이상"]
+        joined["bucket"] = pd.cut(joined["diff_min"], bins=bins, labels=labels, right=False)
+
+        bucket_counts = joined["bucket"].value_counts().sort_index().reset_index()
+        bucket_counts.columns = ["구간", "세션 수"]
+
+        st.subheader("⏱ 설문→통계 이동 소요시간 구간별 세션 수")
+        st.dataframe(bucket_counts, width="stretch")
+        st.bar_chart(bucket_counts.set_index("구간")["세션 수"])
+    else:
+        st.info("설문 완료와 통계 페이지 방문이 모두 있는 세션이 아직 없습니다.")
+else:
+    st.info("timestamp 컬럼이 없어 체류 시간 분석이 어렵습니다.")
+st.markdown("---")
+
 # ============================================================
 # 8) 설문 데이터 로드
 # ============================================================
@@ -138,7 +181,7 @@ df = pd.read_csv(CSV_PATH)
 total_count = len(df)
 mean_abv = df["abv"].mean() if "abv" in df.columns and len(df) > 0 else None
 
-st.subheader("1. 전체 요약")
+st.subheader("설문 전체 요약")
 
 col1, col2 = st.columns(2)
 with col1:
@@ -153,24 +196,40 @@ st.markdown("---")
 # ============================================================
 # 10) 2. 추천 술 타입 분포
 # ============================================================
-st.subheader("2. 추천 술 타입 분포")
-
-if "recommended" in df.columns:
-    rec_counts = df["recommended"].value_counts().rename_axis("술 타입").reset_index(name="응답 수")
-    rec_counts = rec_counts.sort_values("술 타입")
-
-    st.dataframe(rec_counts, width="stretch")
-    st.bar_chart(rec_counts.set_index("술 타입")["응답 수"])
+st.subheader("3. 추천 술 타입 vs 분위기(무드) 상관 분석")
+if CSV_PATH.exists():
+    df_survey = pd.read_csv(CSV_PATH)
 else:
-    st.info("추천 결과 데이터가 없어 분포를 표시할 수 없습니다.")
+    df_survey = None
+    
+if df_survey is not None and {"mood", "recommended"}.issubset(df_survey.columns):
+    mood_rec = df_survey.groupby(["mood", "recommended"]).size().reset_index(name="count")
+    pivot_count = mood_rec.pivot(index="mood", columns="recommended", values="count").fillna(0).astype(int)
 
+    st.subheader("🔢 분위기 × 추천 술 타입 (개수)")
+    st.dataframe(pivot_count, width="stretch")
+
+    # 분위기(mood)별 비율(%)
+    pivot_ratio = pivot_count.div(pivot_count.sum(axis=1), axis=0) * 100
+    pivot_ratio = pivot_ratio.round(1)
+
+    st.subheader("📊 분위기 × 추천 술 타입 (행 기준 비율 %)")
+    st.dataframe(pivot_ratio, width="stretch")
+
+    st.markdown(
+        """
+        - 각 분위기별로 어떤 술 타입 비율이 높은지 확인할 수 있습니다.  
+        - 예: `선물할거에요`에서 위스키 비중이 60% 이상인지 등.
+        """
+    )
+else:
+    st.info("설문 데이터에 'mood' 혹은 'recommended' 컬럼이 없어 분석할 수 없습니다.")
 st.markdown("---")
-
 
 # ============================================================
 # 11) 3. 분위기 × 추천 패턴
 # ============================================================
-st.subheader("3. 분위기/목적별 추천 패턴")
+st.subheader("분위기/목적별 추천 패턴")
 
 if "mood" in df.columns and "recommended" in df.columns:
     mood_rec = df.groupby(["mood", "recommended"]).size().reset_index(name="count")
@@ -187,7 +246,7 @@ st.markdown("---")
 # ============================================================
 # 12) 4. 안주/음식
 # ============================================================
-st.subheader("4. 어떤 안주를 원하나요?")
+st.subheader("어떤 안주를 원하나요?")
 
 if "food" in df.columns:
     food_counts = df["food"].value_counts().rename_axis("안주/음식").reset_index(name="응답 수")
@@ -203,7 +262,7 @@ st.markdown("---")
 # ============================================================
 # 13) 5. 인사이트
 # ============================================================
-st.subheader("5. 데이터 기반 인사이트")
+st.subheader("데이터 기반 인사이트")
 
 st.markdown(
     """
