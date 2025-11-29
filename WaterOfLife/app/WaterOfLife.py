@@ -4,7 +4,7 @@ import time
 import streamlit as st
 
 from page_counter import increase_page_view
-
+increase_page_view("홈")
 ROOT_DIR = Path(__file__).resolve().parents[2] 
 DATA_DIR = ROOT_DIR / "data"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
