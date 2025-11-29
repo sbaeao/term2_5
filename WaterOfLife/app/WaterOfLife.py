@@ -1,12 +1,23 @@
 import streamlit as st
 import streamlit.components.v1 as components
-import ga_utils
 from pathlib import Path
 from ga_utils import inject_ga, send_ga_event
 
-# -----------------------------
+
+# Google Tag 삽입
+st.markdown("""
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-3B4V2J7FZG"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-3B4V2J7FZG');
+</script>
+""", unsafe_allow_html=True)
+
 # GA 설정
-# -----------------------------
 try:
     GA_ID = st.secrets["ga"]["measurement_id"]
     GA_API_SECRET = st.secrets["ga"]["api_secret"]
