@@ -180,8 +180,8 @@ df = pd.read_csv(CSV_PATH)
 # ============================================================
 total_count = len(df)
 mean_abv = df["abv"].mean() if "abv" in df.columns and len(df) > 0 else None
-
-st.subheader("설문 전체 요약")
+st.header("설문 결과")
+st.subheader("전체 요약")
 
 col1, col2 = st.columns(2)
 with col1:
@@ -196,7 +196,7 @@ st.markdown("---")
 # ============================================================
 # 10) 2. 추천 술 타입 분포
 # ============================================================
-st.subheader("3. 추천 술 타입 vs 분위기(무드) 상관 분석")
+st.subheader("추천 술 타입 vs 분위기(무드) 상관 분석")
 if CSV_PATH.exists():
     df_survey = pd.read_csv(CSV_PATH)
 else:
