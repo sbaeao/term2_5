@@ -47,9 +47,7 @@ def log_event(event_name: str):
         df_all = df_new
 
     df_all.to_csv(EVENT_CSV, index=False)
-if "home_logged" not in st.session_state:
-    log_event("home_viewed")
-    st.session_state["home_logged"] = True
+log_event("home_viewed")
 
 
 
