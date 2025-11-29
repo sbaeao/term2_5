@@ -2,7 +2,27 @@ import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
 from pathlib import Path
-from ga_utils import inject_ga, send_ga_event
+from ga_utils import (
+    generate_ids,
+    send_session_start,
+    send_page_view,
+    send_custom_event
+)
+
+if "ga_client_id" not in st.session_state:
+    client_id, session_id = generate_ids()
+
+    st.session_state["ga_client_id"] = client_id
+    st.session_state["ga_session_id"] = session_id
+
+    PAGE_TITLE = "WaterOfLife App"
+    PAGE_URL = "https://dima-term2-5.streamlit.app/stats/"
+
+    # GA4에 session_start 전송
+    send_session_start(client_id, session_id, PAGE_TITLE, PAGE_URL)
+
+    # GA4에 page_view 전송
+    send_page_view(client_id, session_id, PAGE_TITLE, PAGE_URL)
 
 # GA 공통 유틸
 try:
@@ -20,12 +40,23 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)  # data 폴더 없으면 자동 생�
 CSV_PATH = DATA_DIR / "survey_results.csv"
 EVENT_CSV = DATA_DIR / "events.csv"
 
-# GA page_view: stats + 이벤트
-inject_ga(page_title="stats", page_path="/stats")
+# GA page_view: stats (서버에서 page_view 발생)
 try:
-    send_ga_event("stats_viewed", {})
+    send_page_view(
+        st.session_state["ga_client_id"],          # 서버 세션 client_id
+        st.session_state["ga_session_id"],         # 서버 세션 session_id
+        page_title="stats",                        # 페이지 이름
+        page_location="https://dima-term2-5.streamlit.app/stats"   # 페이지 URL
+    )
+except Exception:
+    pass  # GA 실패해도 앱 유지
+
+# GA custom event: stats_viewed
+try:
+    send_custom_event("stats_viewed", {})
 except Exception:
     pass
+
 
 
 # 페이지 기본 설정

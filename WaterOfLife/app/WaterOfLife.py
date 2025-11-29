@@ -1,8 +1,27 @@
 import streamlit as st
 import streamlit.components.v1 as components
 from pathlib import Path
-from ga_utils import inject_ga, send_ga_event
+from ga_utils import (
+    generate_ids,
+    send_session_start,
+    send_page_view,
+    send_custom_event
+)
 
+if "ga_client_id" not in st.session_state:
+    client_id, session_id = generate_ids()
+
+    st.session_state["ga_client_id"] = client_id
+    st.session_state["ga_session_id"] = session_id
+
+    PAGE_TITLE = "WaterOfLife App"
+    PAGE_URL = "https://dima-term2-5.streamlit.app/"
+
+    # GA4에 session_start 전송
+    send_session_start(client_id, session_id, PAGE_TITLE, PAGE_URL)
+
+    # GA4에 page_view 전송
+    send_page_view(client_id, session_id, PAGE_TITLE, PAGE_URL)
 
 # GA 설정
 try:
@@ -12,23 +31,7 @@ try:
 except Exception:
     GA_ENABLED = False
 
-if "ga_injected" not in st.session_state:
-    components.html(
-        f"""
-        <!-- Google tag (gtag.js) -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>
-        <script>
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){{dataLayer.push(arguments);}}
-          gtag('js', new Date());
-          gtag('config', '{GA_ID}');
-        </script>
-        """,
-        height=0,
-        width=0,
-    )
-    st.session_state["ga_injected"] = True
-    
+
 # -----------------------------
 # 이미지 경로 설정
 # -----------------------------
@@ -47,9 +50,16 @@ st.set_page_config(
     layout="centered",
 )
 
-# 🔥 GA page_view: home (메인)
-inject_ga(page_title="home", page_path="/") 
-send_ga_event("home")
+# page_view (홈 페이지)
+send_page_view(
+    st.session_state["ga_client_id"],
+    st.session_state["ga_session_id"],
+    page_title="home",
+    page_location="https://dima-term2-5.streamlit.app/"
+)
+
+# 추가 커스텀 이벤트 (원래 send_ga_event("home") 역할)
+send_custom_event("home")
 # -----------------------------
 # 사이드바
 # -----------------------------
