@@ -94,7 +94,33 @@ else:
     st.info("아직 이벤트 데이터가 없습니다. 설문/통계 페이지를 이용해 주세요.")
     st.stop()
 
+st.subheader("1. 유입 → 설문 → 통계 흐름 분석 (Funnel)")
+st.markdown("`client_id` 기준으로 설문 완료 후 통계 페이지까지 도달한 비율을 계산합니다.")
 
+# 유입 세션: events에 등장한 client_id 전체
+all_clients = set(events["client_id"]) if "client_id" in events.columns else set()
+
+survey_clients = set(events.loc[events["event"] == "survey_completed", "client_id"])
+stats_clients = set(events.loc[events["event"] == "stats_viewed", "client_id"])
+
+total_inflow = len(all_clients)
+total_survey = len(survey_clients)
+total_stats = len(survey_clients & stats_clients)
+
+def ratio(part, whole):
+    return (part / whole * 100) if whole > 0 else 0.0
+
+funnel_data = [
+    {"단계": "유입(이벤트 발생 세션)", "세션 수": total_inflow, "전 단계 대비 전환율(%)": 100.0},
+    {"단계": "설문 완료", "세션 수": total_survey, "전 단계 대비 전환율(%)": ratio(total_survey, total_inflow)},
+    {"단계": "통계 페이지 방문", "세션 수": total_stats, "전 단계 대비 전환율(%)": ratio(total_stats, total_survey)},
+]
+
+df_funnel = pd.DataFrame(funnel_data)
+st.dataframe(df_funnel, width="stretch")
+
+st.bar_chart(df_funnel.set_index("단계")["세션 수"])
+st.markdown("---")
 # ============================================================
 # 8) 설문 데이터 로드
 # ============================================================
