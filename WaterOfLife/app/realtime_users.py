@@ -44,7 +44,25 @@ def cleanup():
                 .execute()
 
 
+import time
+
+_last_active_users = None
+_last_active_users_time = 0
+
 def get_active_users():
-    """현재 실시간 사용자 수"""
+    global _last_active_users, _last_active_users_time
+    now = time.time()
+
+    # 15초 캐시
+    if _last_active_users is not None and (now - _last_active_users_time) < 15:
+        return _last_active_users
+
+    # DB 직접 조회
     result = supabase.table("realtime_users").select("user_id").execute()
-    return len(result.data)
+    count = len(result.data)
+
+    # 캐싱 저장
+    _last_active_users = count
+    _last_active_users_time = now
+
+    return count
