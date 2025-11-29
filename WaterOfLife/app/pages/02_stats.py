@@ -18,7 +18,7 @@ DATA_DIR = ROOT_DIR / "data"
 DATA_DIR.mkdir(parents=True, exist_ok=True)  # data 폴더 없으면 자동 생성
 
 CSV_PATH = DATA_DIR / "survey_results.csv"
-
+EVENT_CSV = DATA_DIR / "events.csv"
 
 # GA page_view: stats + 이벤트
 inject_ga(page_title="stats", page_path="/stats")
@@ -39,6 +39,39 @@ st.title("📊 생명의물 취향 통계")
 st.markdown("#### 지금까지 설문에 참여한 사람들의 취향 데이터를 모아봤어요.")
 st.markdown("---")
 
+# 🔥 전환율 계산
+if EVENT_CSV.exists():
+    events = pd.read_csv(EVENT_CSV)
+
+    # 설문 한 사람들(client_id 기준)
+    survey_clients = set(
+        events.loc[events["event"] == "survey_completed", "client_id"]
+    )
+
+    # 통계 페이지까지 들어온 사람들(client_id 기준)
+    stats_clients = set(
+        events.loc[events["event"] == "stats_viewed", "client_id"]
+    )
+
+    total_survey = len(survey_clients)
+    total_stats = len(survey_clients & stats_clients)  # 설문도 하고 통계도 본 사람
+
+    if total_survey > 0:
+        conversion_rate = total_stats / total_survey * 100
+    else:
+        conversion_rate = 0.0
+
+    st.markdown(
+        f"""
+        ### 🔁 설문 → 통계 페이지 전환율
+
+        - 설문 완료한 세션 수: **{total_survey}**
+        - 통계 페이지까지 온 세션 수: **{total_stats}**
+        - 전환율: **{conversion_rate:.1f}%**
+        """
+    )
+else:
+    st.info("아직 이벤트 데이터가 없습니다. 설문/통계 페이지를 이용해 주세요.")
 
 if not CSV_PATH.exists():
     st.warning("아직 설문 데이터가 없습니다. 먼저 설문을 제출해 주세요!")

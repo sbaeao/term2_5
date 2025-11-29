@@ -4,6 +4,7 @@ import pandas as pd
 from pathlib import Path
 from datetime import datetime  
 import base64
+import uuid
 from ga_utils import inject_ga, send_ga_event  
 
 ROOT_DIR = Path(__file__).resolve().parents[2]   # term2_5/
@@ -11,6 +12,12 @@ DATA_DIR = ROOT_DIR / "data"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 CSV_PATH = DATA_DIR / "survey_results.csv"
+EVENT_CSV = DATA_DIR / "events.csv"
+
+if "client_id" not in st.session_state:
+    st.session_state["client_id"] = str(uuid.uuid4())
+
+CLIENT_ID = st.session_state["client_id"]
 
 APP_DIR = Path(__file__).resolve().parents[1]   # .../WaterOfLife/app
 IMG_DIR = APP_DIR / "images"
@@ -664,11 +671,23 @@ def get_recommendation_copy(category: str):
             """)
 
 
-def save_result(companion, mood, abv, taste_pref, food, recommended):
-    """
-    통계용으로 쓰기 위한 CSV 저장 (stats 페이지와 동일 경로 사용)
-    """
+# LOG
+def log_event(event_name: str):
+    df_new = pd.DataFrame({
+        "timestamp": [datetime.now().isoformat()],
+        "client_id": [CLIENT_ID],   # 🔥 누가 했는지
+        "event": [event_name],      # "survey_completed" / "stats_viewed"
+    })
+    if EVENT_CSV.exists():
+        df_old = pd.read_csv(EVENT_CSV)
+        df_all = pd.concat([df_old, df_new], ignore_index=True)
+    else:
+        df_all = df_new
 
+    df_all.to_csv(EVENT_CSV, index=False)
+    
+# 통계용
+def save_result(companion, mood, abv, taste_pref, food, recommended):
     data = {
         "timestamp": [datetime.now().isoformat()],
         "companion": [companion],
@@ -712,6 +731,7 @@ if submitted:
     except Exception:
         pass  # GA 실패해도 앱 안 죽게
 
+    log_event("survey_completed")
     st.success("✨ 설문이 완료되었습니다. 오늘 당신에게 어울리는 한 잔은…")
 
     get_recommendation_copy(recommended)
@@ -778,6 +798,7 @@ cols = st.columns([1, 2, 1])
 with cols[1]:
     go_stats = st.button("📊 다른 사람들 취향 통계 보러가기")
 if go_stats:
+    log_event("stats_viewed")
     st.switch_page("pages/02_stats.py")
 
     # 🔁 메인으로 돌아가기 
