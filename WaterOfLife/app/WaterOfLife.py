@@ -11,7 +11,7 @@ if "client_id" not in st.session_state:
 
 client_id = st.session_state.get("client_id", "unknown")
 
-    ROOT_DIR = Path(__file__).resolve().parents[2] 
+ROOT_DIR = Path(__file__).resolve().parents[2] 
 DATA_DIR = ROOT_DIR / "data"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
