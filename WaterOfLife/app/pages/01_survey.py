@@ -5,27 +5,7 @@ from pathlib import Path
 from datetime import datetime  
 import base64
 import uuid
-from ga_utils import (
-    generate_ids,
-    send_session_start,
-    send_page_view,
-    send_custom_event
-)
 
-if "ga_client_id" not in st.session_state:
-    client_id, session_id = generate_ids()
-
-    st.session_state["ga_client_id"] = client_id
-    st.session_state["ga_session_id"] = session_id
-
-    PAGE_TITLE = "WaterOfLife App"
-    PAGE_URL = "https://dima-term2-5.streamlit.app/servey/"
-
-    # GA4에 session_start 전송
-    send_session_start(client_id, session_id, PAGE_TITLE, PAGE_URL)
-
-    # GA4에 page_view 전송
-    send_page_view(client_id, session_id, PAGE_TITLE, PAGE_URL)
 
 ROOT_DIR = Path(__file__).resolve().parents[2]   # term2_5/
 DATA_DIR = ROOT_DIR / "data"
@@ -45,17 +25,6 @@ IMG_DIR = APP_DIR / "images"
 def img(path: str) -> str:
     """images 폴더 기준 경로 헬퍼"""
     return str(IMG_DIR / path)
-
-
-send_page_view(
-    st.session_state["ga_client_id"],
-    st.session_state["ga_session_id"],
-    page_title="survey",
-    page_location="https://dima-term2-5.streamlit.app/survey"
-)
-
-send_custom_event("survey_viewed")
-
 
 def img_to_base64(path: str) -> str:
     """로컬 이미지 파일을 base64 문자열로 변환"""
@@ -743,22 +712,6 @@ if submitted:
         companion, mood, abv, taste_pref, food
     )
     save_result(companion, mood, abv, taste_pref, food, recommended)
-     # 🔥 GA 이벤트: 설문 완료
-    ga_params = {
-        "companion": companion,
-        "mood": mood,
-        "abv": abv,
-        "taste_pref": taste_pref,
-        "food": food,
-        "recommended": recommended,
-    }
-
-    try:
-        send_custom_event("survey_completed", ga_params)
-    except Exception:
-        pass
-
-
     log_event("survey_completed")
     st.success("✨ 설문이 완료되었습니다. 오늘 당신에게 어울리는 한 잔은…")
 
