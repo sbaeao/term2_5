@@ -1,10 +1,17 @@
 from pathlib import Path
 import pandas as pd
 from datetime import datetime  
+import uuid
 import streamlit as st
 from page_counter import increase_page_view
 increase_page_view("홈")
-ROOT_DIR = Path(__file__).resolve().parents[2] 
+
+if "client_id" not in st.session_state:
+    st.session_state["client_id"] = str(uuid.uuid4())
+
+client_id = st.session_state.get("client_id", "unknown")
+
+    ROOT_DIR = Path(__file__).resolve().parents[2] 
 DATA_DIR = ROOT_DIR / "data"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -15,7 +22,6 @@ EVENT_CSV = DATA_DIR / "events.csv"
 # 이미지 경로 설정
 # -----------------------------
 BASE_DIR = Path(__file__).resolve().parent
-CLIENT_ID = st.session_state["client_id"]
 def img(path: str) -> Path:
     return BASE_DIR / "images" / path
 
@@ -31,7 +37,7 @@ st.set_page_config(
 def log_event(event_name: str):
     df_new = pd.DataFrame({
         "timestamp": [datetime.now().isoformat()],
-        "client_id": [CLIENT_ID],   # 🔥 누가 했는지
+        "client_id": [client_id],   # 🔥 누가 했는지
         "event": [event_name],      # "survey_completed" / "stats_viewed"
     })
     if EVENT_CSV.exists():
