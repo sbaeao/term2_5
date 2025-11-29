@@ -2,9 +2,6 @@ import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 import pandas as pd
 from pathlib import Path
-import time
-import uuid
-
 from realtime_users import heartbeat, cleanup, get_active_users
 from page_counter import increase_page_view, get_all_page_views
 
