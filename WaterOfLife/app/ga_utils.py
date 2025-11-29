@@ -1,11 +1,12 @@
 # app/ga_utils.py
 import streamlit as st
+import os
 import streamlit.components.v1 as components
 import uuid
 import requests
 import logging
 from sys import stdout
-import os
+
 
 # 🔹 secrets 에서 설정 읽기
 try:

@@ -1,6 +1,6 @@
-import ga_utils
 import streamlit as st
 import streamlit.components.v1 as components
+import ga_utils
 from pathlib import Path
 from ga_utils import inject_ga, send_ga_event
 
