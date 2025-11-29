@@ -15,7 +15,7 @@ EVENT_CSV = DATA_DIR / "events.csv"
 # 이미지 경로 설정
 # -----------------------------
 BASE_DIR = Path(__file__).resolve().parent
-
+CLIENT_ID = st.session_state["client_id"]
 def img(path: str) -> Path:
     return BASE_DIR / "images" / path
 
@@ -29,7 +29,6 @@ st.set_page_config(
     layout="centered",
 )
 def log_event(event_name: str):
-    CLIENT_ID = st.session_state["client_id"]
     df_new = pd.DataFrame({
         "timestamp": [datetime.now().isoformat()],
         "client_id": [CLIENT_ID],   # 🔥 누가 했는지
