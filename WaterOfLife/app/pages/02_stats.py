@@ -138,26 +138,12 @@ if "timestamp" in events.columns:
         joined["diff_min"] = joined["diff_sec"] / 60
 
         st.write(f"분석 대상 세션 수: **{len(joined)}**")
-
-        st.subheader("요약 통계")
         st.dataframe(
             joined["diff_min"].describe()[["count", "mean", "50%", "max"]]
             .rename({"count": "개수", "mean": "평균(분)", "50%": "중앙값(분)", "max": "최대(분)"})
             .to_frame("값"),
             width="stretch",
         )
-
-        # 간단한 히스토그램용 bin
-        bins = [0, 1, 3, 5, 10, 30, 60, 9999]
-        labels = ["0~1분", "1~3분", "3~5분", "5~10분", "10~30분", "30~60분", "60분 이상"]
-        joined["bucket"] = pd.cut(joined["diff_min"], bins=bins, labels=labels, right=False)
-
-        bucket_counts = joined["bucket"].value_counts().sort_index().reset_index()
-        bucket_counts.columns = ["구간", "세션 수"]
-
-        st.subheader("⏱ 설문→통계 이동 소요시간 구간별 세션 수")
-        st.dataframe(bucket_counts, width="stretch")
-        st.bar_chart(bucket_counts.set_index("구간")["세션 수"])
     else:
         st.info("설문 완료와 통계 페이지 방문이 모두 있는 세션이 아직 없습니다.")
 else:
