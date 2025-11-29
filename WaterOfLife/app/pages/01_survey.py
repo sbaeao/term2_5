@@ -5,6 +5,11 @@ from pathlib import Path
 from datetime import datetime  
 import base64
 import uuid
+from view_counter import increase_view
+
+is_autorefresh = False
+increase_view("설문_추천", is_autorefresh)
+
 
 
 ROOT_DIR = Path(__file__).resolve().parents[2]   # term2_5/
