@@ -5,10 +5,8 @@ from pathlib import Path
 from datetime import datetime  
 import base64
 import uuid
-from view_counter import increase_view
-
-is_autorefresh = False
-increase_view("설문_추천", is_autorefresh)
+from page_counter import increase_page_view
+increase_page_view("설문_추천")
 
 
 

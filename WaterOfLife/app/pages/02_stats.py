@@ -2,46 +2,20 @@ import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 import pandas as pd
 from pathlib import Path
-from view_counter import increase_view, load_views
 import time
 import uuid
 
-# ─────────────────────────────────────────────
-# 오토리프레시 여부 검사
-# ─────────────────────────────────────────────
-is_autorefresh = st.session_state.get("stats_refresh") is not None
+from realtime_users import heartbeat, cleanup, get_active_users
+from page_counter import increase_page_view, get_all_page_views
 
-# 현재 페이지 조회수 증가 (자동 새로고침 제외)
-views = increase_view("통계", is_autorefresh=is_autorefresh)
+# 실시간 사용자 유지
+heartbeat()
+cleanup()
 
+# 페이지 조회수 증가
+increase_page_view("통계")
 
-# ─────────────────────────────────────────────
-# 실시간 사용자 로직
-# ─────────────────────────────────────────────
-
-# 사용자 고유 ID
-if "user_id" not in st.session_state:
-    st.session_state["user_id"] = str(uuid.uuid4())
-
-user_id = st.session_state["user_id"]
-now = time.time()
-
-# active_users 저장소 준비
-if "active_users" not in st.session_state:
-    st.session_state["active_users"] = {}
-
-# heartbeat 갱신
-st.session_state["active_users"][user_id] = now
-
-# 60초 이상 지난 사용자 제거
-TIMEOUT = 60
-alive = {
-    uid: ts
-    for uid, ts in st.session_state["active_users"].items()
-    if now - ts <= TIMEOUT
-}
-st.session_state["active_users"] = alive
-
+active_users_count = get_active_users()
 
 # ─────────────────────────────────────────────
 # 페이지 기본 설정
@@ -78,18 +52,20 @@ st.markdown("---")
 # 실시간 카운터 표시
 st.subheader("📈 페이지별 조회수")
 
-all_views = load_views()
+from page_counter import get_all_page_views
 
-if all_views:
+views = get_all_page_views()
+
+if views:
     df_views = (
-        pd.DataFrame(list(all_views.items()), columns=["페이지", "조회수"])
+        pd.DataFrame(views)
+        .rename(columns={"page_name": "페이지", "view_count": "조회수"})
         .sort_values("조회수", ascending=False)
     )
     st.dataframe(df_views, use_container_width=True)
+    st.write(f"🔥 **현재 실시간 사용자:** {active_users_count}명")
 else:
-    st.info("조회수 데이터가 없습니다.")
-st.write(f"🔥 **현재 실시간 사용자:** {len(st.session_state['active_users'])}명")
-st.markdown("---")
+    st.info("아직 조회수 데이터가 없습니다.")
 
 # 🔥 전환율 계산
 if EVENT_CSV.exists():

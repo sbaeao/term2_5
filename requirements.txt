@@ -4,3 +4,4 @@ numpy
 Pillow
 pathlib
 streamlit-autorefresh
+supabase

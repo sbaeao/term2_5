@@ -1,10 +1,9 @@
 import streamlit as st
 import streamlit.components.v1 as components
 from pathlib import Path
-from view_counter import increase_view
+from page_counter import increase_page_view
+increase_page_view("홈")
 
-is_autorefresh = False
-increase_view("home", is_autorefresh)
 # -----------------------------
 # 이미지 경로 설정
 # -----------------------------
