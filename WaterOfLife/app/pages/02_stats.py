@@ -1,10 +1,8 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
-import os
-import requests
-import uuid
 from pathlib import Path
+from ga_utils import inject_ga, send_ga_event
 
 # GA 공통 유틸
 try:
@@ -21,61 +19,14 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)  # data 폴더 없으면 자동 생�
 
 CSV_PATH = DATA_DIR / "survey_results.csv"
 
-def inject_ga(page_name: str):
-    if not GA_ENABLED:
-        return
-
-    ga_js = f"""
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){{dataLayer.push(arguments);}}
-      gtag('js', new Date());
-      gtag('config', '{GA_ID}', {{
-        'page_title': '{page_name}',
-        'page_path': '/{page_name}'
-      }});
-    </script>
-    """
-    components.html(ga_js, height=0)
-
-
-def send_ga_event(event_name: str, params: dict | None = None):
-    if not GA_ENABLED:
-        return
-
-    if params is None:
-        params = {}
-
-    payload = {
-        "client_id": str(uuid.uuid4()),
-        "events": [
-            {
-                "name": event_name,
-                "params": params,
-            }
-        ],
-    }
-
-    requests.post(
-        "https://www.google-analytics.com/mp/collect",
-        params={
-            "measurement_id": GA_ID,
-            "api_secret": GA_API_SECRET,
-        },
-        json=payload,
-        timeout=2,
-    )
-
 
 # GA page_view: stats + 이벤트
-inject_ga("stats")
-
+inject_ga(page_title="stats", page_path="/stats")
 try:
-    send_ga_event("stats_viewed")
+    send_ga_event("stats_viewed", {})
 except Exception:
     pass
+
 
 # 페이지 기본 설정
 st.set_page_config(

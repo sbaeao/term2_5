@@ -1,8 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
-import requests
-import uuid
 from pathlib import Path
+from ga_utils import inject_ga, send_ga_event
 
 # -----------------------------
 # GA 설정
@@ -13,108 +12,6 @@ try:
     GA_ENABLED = True
 except Exception:
     GA_ENABLED = False
-
-
-def inject_ga(page_name: str):
-    """
-    Google Analytics 4 page_view 삽입
-
-    - gtag.js 로드
-    - send_page_view 자동 전송 끄고
-    - 명시적으로 page_view 이벤트 한 번 쏴줌
-    - home은 page_path="/", 나머지는 "/{page_name}"
-    """
-    if not GA_ENABLED:
-        return
-
-    if page_name == "home":
-        page_path = "/"
-    else:
-        page_path = f"/{page_name}"
-
-    ga_js = f"""
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){{dataLayer.push(arguments);}};
-
-      // GA 초기화
-      gtag('js', new Date());
-
-      // 기본 config (자동 page_view 비활성화)
-      gtag('config', '{GA_ID}', {{
-        'send_page_view': false
-      }});
-
-      // 수동 page_view 이벤트 전송
-      gtag('event', 'page_view', {{
-        'page_title': '{page_name}',
-        'page_path': '{page_path}',
-        'page_location': window.location.href
-      }});
-    </script>
-    """
-    components.html(ga_js, height=0)
-def send_ga_event(event_name: str, params: dict | None = None):
-    """
-    GA4 Measurement Protocol로 커스텀 이벤트 전송
-    (stats_viewed, survey_completed 등)
-    """
-    if not GA_ENABLED:
-        return
-
-    if params is None:
-        params = {}
-
-    payload = {
-        "client_id": str(uuid.uuid4()),
-        "events": [
-            {
-                "name": event_name,
-                "params": params,
-            }
-        ],
-    }
-
-    requests.post(
-        "https://www.google-analytics.com/mp/collect",
-        params={
-            "measurement_id": GA_ID,
-            "api_secret": GA_API_SECRET,
-        },
-        json=payload,
-        timeout=2,
-    )
-def send_page_view(page_name: str):
-    if not GA_ENABLED:
-        return
-
-    params = {
-        "page_title": page_name,
-        "page_location": "https://dima-term2-5.streamlit.app/",
-        "page_path": "/"
-    }
-
-    payload = {
-        "client_id": str(uuid.uuid4()),
-        "events": [
-            {
-                "name": "page_view",
-                "params": params,
-            }
-        ],
-    }
-
-    requests.post(
-        "https://www.google-analytics.com/mp/collect",
-        params={
-            "measurement_id": GA_ID,
-            "api_secret": GA_API_SECRET,
-        },
-        json=payload,
-        timeout=2,
-    )
 
 
 # -----------------------------
@@ -136,8 +33,8 @@ st.set_page_config(
 )
 
 # 🔥 GA page_view: home (메인)
-inject_ga("home")
-send_page_view("home")
+inject_ga(page_title="home", page_path="/") 
+send_ga_event("home")
 # -----------------------------
 # 사이드바
 # -----------------------------

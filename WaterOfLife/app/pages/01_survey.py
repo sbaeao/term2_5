@@ -3,17 +3,8 @@ import streamlit.components.v1 as components
 import pandas as pd
 from pathlib import Path
 from datetime import datetime  
-import requests
-import uuid
 import base64
-
-# GA 공통 유틸
-try:
-    GA_ID = st.secrets["ga"]["measurement_id"]
-    GA_API_SECRET = st.secrets["ga"]["api_secret"]
-    GA_ENABLED = True
-except Exception:
-    GA_ENABLED = False
+from ga_utils import inject_ga, send_ga_event  
 
 ROOT_DIR = Path(__file__).resolve().parents[2]   # term2_5/
 DATA_DIR = ROOT_DIR / "data"
@@ -29,60 +20,7 @@ def img(path: str) -> str:
     return str(IMG_DIR / path)
 
 
-
-def inject_ga(page_name: str):
-    if not GA_ENABLED:
-        return
-
-    ga_js = (
-        """
-        <!-- Google tag (gtag.js) -->
-        """
-        + '<script async src="https://www.googletagmanager.com/gtag/js'
-        + f'?id={GA_ID}"></script>\n'
-        + f"""
-        <script>
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){{dataLayer.push(arguments);}}
-          gtag('js', new Date());
-          gtag('config', '{GA_ID}', {{
-            'page_title': '{page_name}',
-            'page_path': '/{page_name}'
-          }});
-        </script>
-        """
-    )
-    components.html(ga_js, height=0)
-
-
-def send_ga_event(event_name: str, params: dict | None = None):
-    if not GA_ENABLED:
-        return
-
-    if params is None:
-        params = {}
-
-    payload = {
-        "client_id": str(uuid.uuid4()),
-        "events": [
-            {
-                "name": event_name,
-                "params": params,
-            }
-        ],
-    }
-
-    requests.post(
-        "https://www.google-analytics.com/mp/collect",
-        params={
-            "measurement_id": GA_ID,
-            "api_secret": GA_API_SECRET,
-        },
-        json=payload,
-        timeout=2,
-    )
-
-inject_ga("survey")
+inject_ga(page_title="survey", page_path="/survey")
 
 def img_to_base64(path: str) -> str:
     """로컬 이미지 파일을 base64 문자열로 변환"""
