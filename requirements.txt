@@ -4,4 +4,3 @@ numpy
 Pillow
 pathlib
 streamlit-autorefresh
-view_counter
