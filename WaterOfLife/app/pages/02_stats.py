@@ -149,6 +149,36 @@ if "timestamp" in events.columns:
 else:
     st.info("timestamp 컬럼이 없어 체류 시간 분석이 어렵습니다.")
 st.markdown("---")
+st.header("재방문율 (Returning User Rate)")
+
+if "timestamp" in events.columns:
+    events["date"] = events["timestamp"].dt.date
+
+    visits_per_client = events.groupby("client_id")["date"].nunique().reset_index(name="방문일 수")
+    total_clients = len(visits_per_client)
+    returning = (visits_per_client["방문일 수"] >= 2).sum()
+
+    returning_rate = (returning / total_clients * 100) if total_clients > 0 else 0.0
+
+    st.markdown(
+        f"""
+        - 전체 고유 세션(client_id) 수: **{total_clients}**  
+        - 2일 이상 방문한 세션 수: **{returning}**  
+        - 재방문율: **{returning_rate:.1f}%**
+        """
+    )
+
+    st.subheader("방문일 수 분포")
+    dist = visits_per_client["방문일 수"].value_counts().sort_index().reset_index()
+    dist.columns = ["방문일 수", "세션 수"]
+    st.dataframe(dist, width="stretch")
+    st.bar_chart(dist.set_index("방문일 수")["세션 수"])
+else:
+    st.info("timestamp 컬럼이 없어 재방문율 계산이 어렵습니다.")
+st.markdown("---")
+
+
+
 
 # ============================================================
 # 8) 설문 데이터 로드
@@ -160,10 +190,6 @@ if not CSV_PATH.exists():
 
 df = pd.read_csv(CSV_PATH)
 
-
-# ============================================================
-# 9) 1. 전체 요약
-# ============================================================
 total_count = len(df)
 mean_abv = df["abv"].mean() if "abv" in df.columns and len(df) > 0 else None
 st.header("설문 결과")
@@ -178,10 +204,7 @@ with col2:
 
 st.markdown("---")
 
-
-# ============================================================
-# 10) 2. 추천 술 타입 분포
-# ============================================================
+# 2. 추천 술 타입 분포
 st.subheader("추천 술 타입 vs 분위기(무드) 상관 분석")
 if CSV_PATH.exists():
     df_survey = pd.read_csv(CSV_PATH)
@@ -211,27 +234,7 @@ if df_survey is not None and {"mood", "recommended"}.issubset(df_survey.columns)
 else:
     st.info("설문 데이터에 'mood' 혹은 'recommended' 컬럼이 없어 분석할 수 없습니다.")
 st.markdown("---")
-
-# ============================================================
-# 11) 3. 분위기 × 추천 패턴
-# ============================================================
-st.subheader("분위기/목적별 추천 패턴")
-
-if "mood" in df.columns and "recommended" in df.columns:
-    mood_rec = df.groupby(["mood", "recommended"]).size().reset_index(name="count")
-    pivot = mood_rec.pivot(index="mood", columns="recommended", values="count").fillna(0).astype(int)
-
-    st.markdown("##### 분위기 × 추천 술 타입 테이블")
-    st.dataframe(pivot, width="stretch")
-else:
-    st.info("교차 분석에 필요한 컬럼이 없습니다.")
-
-st.markdown("---")
-
-
-# ============================================================
 # 12) 4. 안주/음식
-# ============================================================
 st.subheader("어떤 안주를 원하나요?")
 
 if "food" in df.columns:
