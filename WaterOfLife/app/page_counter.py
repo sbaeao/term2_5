@@ -3,7 +3,7 @@ from supabase_client import supabase
 
 def increase_page_view(page_name: str):
     """특정 페이지의 조회수 +1"""
-    supabase.rpc("increment_page_view", {"page_name": page_name}).execute()
+    supabase.rpc("increment_page_view", {"p_page_name": page_name}).execute()
 
 
 def get_all_page_views():
