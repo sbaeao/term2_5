@@ -111,7 +111,7 @@ st.bar_chart(df_funnel.set_index("단계")["세션 수"])
 st.markdown("---")
 
 # 체류시간 분포
-st.subheader("설문 완료 → 통계 페이지 진입까지 소요 시간 분포")
+st.subheader("설문 완료 → 통계 페이지 진입까지 소요 시간 분포 (초 단위)")
 
 if "timestamp" in events.columns:
     # 설문 완료 & 통계 방문이 모두 있는 client만 대상
@@ -134,21 +134,44 @@ if "timestamp" in events.columns:
     )
 
     if not joined.empty:
-        joined["diff_sec"] = (joined["stats_time"] - joined["survey_time"]).dt.total_seconds()
-        joined["diff_min"] = joined["diff_sec"] / 60
+        # 🔥 소요 시간 (초 단위)
+        joined["diff_sec"] = (joined["stats_time"] - joined["survey_time"]).dt.total_seconds().astype(int)
 
         st.write(f"분석 대상 세션 수: **{len(joined)}**")
-        st.dataframe(
-            joined["diff_min"].describe()[["count", "mean", "50%", "max"]]
-            .rename({"count": "개수", "mean": "평균(분)", "50%": "중앙값(분)", "max": "최대(분)"})
-            .to_frame("값"),
-            width="stretch",
-        )
+
+        # 요약 통계 (초 단위)
+        summary = joined["diff_sec"].describe()[["count", "mean", "50%", "max"]]
+        summary = summary.rename({
+            "count": "개수",
+            "mean": "평균(초)",
+            "50%": "중앙값(초)",
+            "max": "최대(초)",
+        }).to_frame("값")
+
+        st.dataframe(summary, width="stretch")
+
+        # 🔥 10초 단위 구간 분포 (보기 좋게)
+        bins = [0, 10, 20, 30, 60, 120, 300, 600, 999999]
+        labels = [
+            "0~10초", "10~20초", "20~30초", "30~60초",
+            "1~2분", "2~5분", "5~10분", "10분 이상"
+        ]
+        joined["bucket"] = pd.cut(joined["diff_sec"], bins=bins, labels=labels, right=False)
+
+        bucket_counts = joined["bucket"].value_counts().sort_index().reset_index()
+        bucket_counts.columns = ["구간", "세션 수"]
+
+        st.subheader("⏱ 소요 시간 구간별 세션 수")
+        st.dataframe(bucket_counts, width="stretch")
+        st.bar_chart(bucket_counts.set_index("구간")["세션 수"])
+
     else:
         st.info("설문 완료와 통계 페이지 방문이 모두 있는 세션이 아직 없습니다.")
 else:
     st.info("timestamp 컬럼이 없어 체류 시간 분석이 어렵습니다.")
+
 st.markdown("---")
+
 st.header("재방문율 (Returning User Rate)")
 
 if "timestamp" in events.columns:
