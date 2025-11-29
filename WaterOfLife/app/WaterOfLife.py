@@ -4,18 +4,6 @@ from pathlib import Path
 from ga_utils import inject_ga, send_ga_event
 
 
-# Google Tag 삽입 (components.html 사용)
-components.html("""
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-3B4V2J7FZG"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-3B4V2J7FZG');
-</script>
-""", height=0, width=0)
-
 # GA 설정
 try:
     GA_ID = st.secrets["ga"]["measurement_id"]
@@ -24,7 +12,23 @@ try:
 except Exception:
     GA_ENABLED = False
 
-
+if "ga_injected" not in st.session_state:
+    components.html(
+        f"""
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){{dataLayer.push(arguments);}}
+          gtag('js', new Date());
+          gtag('config', '{GA_ID}');
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
+    st.session_state["ga_injected"] = True
+    
 # -----------------------------
 # 이미지 경로 설정
 # -----------------------------
