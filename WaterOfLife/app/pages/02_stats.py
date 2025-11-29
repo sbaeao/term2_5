@@ -25,12 +25,12 @@ st_autorefresh(interval=10000, key="stats_refresh")
 # ============================================================
 # 4) 실시간 사용자 + 조회수 시스템
 # ============================================================
-from realtime_users import heartbeat, cleanup, get_active_users
+from realtime_users import heartbeat, cleanup_throttled, get_active_users
 from page_counter import increase_page_view, get_all_page_views
 
 # 실시간 업데이트
 heartbeat()
-cleanup()
+cleanup_throttled()  # 30초에 한 번만 cleanup 실행 (realtime_users.py에서 interval 조정 가능)
 active_users_count = get_active_users()
 
 # 조회수 (세션당 1번만)
