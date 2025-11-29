@@ -1,18 +1,20 @@
-import streamlit as st
-import streamlit.components.v1 as components
 from pathlib import Path
 import pandas as pd
 import time
-from page_counter import increase_page_view
-increase_page_view("홈")
+import streamlit as st
 
-ROOT_DIR = Path(__file__).resolve().parents[1]
+from page_counter import increase_page_view
+
+ROOT_DIR = Path(__file__).resolve().parents[2] 
 DATA_DIR = ROOT_DIR / "data"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
+
 EVENT_CSV = DATA_DIR / "events.csv"
+
 
 def log_event(event_name: str):
     """events.csv에 이벤트를 기록"""
+
     if "user_id" not in st.session_state:
         st.session_state["user_id"] = st.session_state.get("client_id", "unknown")
 
@@ -32,7 +34,6 @@ def log_event(event_name: str):
         df = new_row
 
     df.to_csv(EVENT_CSV, index=False)
-    
 # -----------------------------
 # 이미지 경로 설정
 # -----------------------------
@@ -50,6 +51,13 @@ st.set_page_config(
     page_icon=img("1_SiteLogo.png"),
     layout="centered",
 )
+
+if "home_logged" not in st.session_state:
+    log_event("home_viewed")
+    st.session_state["home_logged"] = True
+
+
+
 # -----------------------------
 # 사이드바
 # -----------------------------
