@@ -5,6 +5,7 @@ import uuid
 import requests
 import logging
 from sys import stdout
+import os
 
 # 🔹 secrets 에서 설정 읽기
 try:
