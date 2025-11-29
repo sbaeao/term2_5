@@ -10,21 +10,6 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 EVENT_CSV = DATA_DIR / "events.csv"
 
-def log_event(event_name: str):
-    CLIENT_ID = st.session_state["client_id"]
-    df_new = pd.DataFrame({
-        "timestamp": [datetime.now().isoformat()],
-        "client_id": [CLIENT_ID],   # 🔥 누가 했는지
-        "event": [event_name],      # "survey_completed" / "stats_viewed"
-    })
-    if EVENT_CSV.exists():
-        df_old = pd.read_csv(EVENT_CSV)
-        df_all = pd.concat([df_old, df_new], ignore_index=True)
-    else:
-        df_all = df_new
-
-    df_all.to_csv(EVENT_CSV, index=False)
-
 
 # -----------------------------
 # 이미지 경로 설정
@@ -43,7 +28,20 @@ st.set_page_config(
     page_icon=img("1_SiteLogo.png"),
     layout="centered",
 )
+def log_event(event_name: str):
+    CLIENT_ID = st.session_state["client_id"]
+    df_new = pd.DataFrame({
+        "timestamp": [datetime.now().isoformat()],
+        "client_id": [CLIENT_ID],   # 🔥 누가 했는지
+        "event": [event_name],      # "survey_completed" / "stats_viewed"
+    })
+    if EVENT_CSV.exists():
+        df_old = pd.read_csv(EVENT_CSV)
+        df_all = pd.concat([df_old, df_new], ignore_index=True)
+    else:
+        df_all = df_new
 
+    df_all.to_csv(EVENT_CSV, index=False)
 if "home_logged_" not in st.session_state:
     log_event("home_viewed")
     st.session_state["home_logged_"] = True
