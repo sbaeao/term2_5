@@ -754,10 +754,7 @@ st.markdown(
 )
 
 def on_purchase_clicked():
-    if st.session_state.get("purchase_logged"):
-        return
     log_event("purchase_clicked")
-    st.session_state["purchase_logged"] = True
 
 if submitted:
     recommended, scores = recommend_drink(
