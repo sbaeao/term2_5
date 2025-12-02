@@ -102,8 +102,11 @@ funnel_data = [
     {"단계": "설문 완료", "세션 수": total_survey, "전 단계 대비 전환율(%)": ratio(total_survey, total_inflow)},
     {"단계": "구매 버튼 클릭", "세션 수": total_purchase, "전 단계 대비 전환율(%)": ratio(total_purchase, total_survey)},
 ]
-
 df_funnel = pd.DataFrame(funnel_data)
+order = ["유입(홈)", "설문 완료", "구매 버튼 클릭"]
+df_funnel["단계"] = pd.Categorical(df_funnel["단계"], categories=order, ordered=True)
+df_funnel = df_funnel.sort_values("단계")
+
 st.dataframe(df_funnel, width="stretch")
 
 st.bar_chart(df_funnel.set_index("단계")["세션 수"])
