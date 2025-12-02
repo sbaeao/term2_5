@@ -753,6 +753,12 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+def on_purchase_clicked():
+    if st.session_state.get("purchase_logged"):
+        return
+    log_event("purchase_clicked")
+    st.session_state["purchase_logged"] = True
+
 if submitted:
     recommended, scores = recommend_drink(
         companion, mood, abv, taste_pref, food
@@ -767,10 +773,8 @@ if submitted:
 
     with st.expander("🔎 추천 결과에 영향을 준 요소(카테고리별 점수) 보기"):
         st.write(scores)
-    go_purchase = st.button("지금 주문하러 가기")
-    if go_purchase:
-        log_event("purchase_clicked")
-        #webbrowser.open_new_tab("https://www.liquormate.co.kr/")
+    st.button("지금 주문하러 가기", on_click=on_purchase_clicked)
+
     st.markdown("---")
     st.markdown(
         """
