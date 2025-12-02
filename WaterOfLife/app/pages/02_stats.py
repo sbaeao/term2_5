@@ -33,10 +33,8 @@ heartbeat()
 cleanup_throttled()  # 30초에 한 번만 cleanup 실행 (realtime_users.py에서 interval 조정 가능)
 active_users_count = get_active_users()
 
-# 조회수 (세션당 1번만)
-if "view_logged_stats" not in st.session_state:
-    increase_page_view("통계")
-    st.session_state["view_logged_stats"] = True
+# 조회수 증가
+increase_page_view("통계")
 
 
 # ============================================================
