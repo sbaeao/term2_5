@@ -72,7 +72,6 @@ st.markdown("---")
 # ============================================================
 if EVENT_CSV.exists():
     events = pd.read_csv(EVENT_CSV)
-
 else:
     st.info("아직 이벤트 데이터가 없습니다. 설문/통계 페이지를 이용해 주세요.")
     st.stop()
@@ -82,18 +81,18 @@ if "timestamp" in events.columns:
 else:
     st.warning("⚠ events.csv에 'timestamp' 컬럼이 없어 시간대/재방문 통계가 제한될 수 있습니다.")
 
-st.subheader("🔁 유입 → 설문 → 통계 흐름 분석 (Funnel)")
-st.markdown("`client_id` 기준으로 설문 완료 후 통계 페이지까지 도달한 비율을 계산합니다.")
+st.subheader("🔁 유입 → 설문 → 구매 흐름 분석 (Funnel)")
+st.markdown("`client_id` 기준으로 설문 완료 후 구매 버튼까지 도달한 비율을 계산합니다.")
 
 # 유입 세션: events에 등장한 client_id 전체
 all_clients = set(events["client_id"]) if "client_id" in events.columns else set()
 
 survey_clients = set(events.loc[events["event"] == "survey_completed", "client_id"])
-stats_clients = set(events.loc[events["event"] == "stats_viewed", "client_id"])
+purchase_clients = set(events.loc[events["event"] == "purchase_clicked", "client_id"])
 
 total_inflow = len(all_clients)
 total_survey = len(survey_clients)
-total_stats = len(survey_clients & stats_clients)
+total_purchase = len(survey_clients & purchase_clients)   # 설문 완료한 사람 중 구매버튼까지 간 사람
 
 def ratio(part, whole):
     return (part / whole * 100) if whole > 0 else 0.0
@@ -101,7 +100,7 @@ def ratio(part, whole):
 funnel_data = [
     {"단계": "유입(홈)", "세션 수": total_inflow, "전 단계 대비 전환율(%)": 100.0},
     {"단계": "설문 완료", "세션 수": total_survey, "전 단계 대비 전환율(%)": ratio(total_survey, total_inflow)},
-    {"단계": "통계 페이지 방문", "세션 수": total_stats, "전 단계 대비 전환율(%)": ratio(total_stats, total_survey)},
+    {"단계": "구매 버튼 클릭", "세션 수": total_purchase, "전 단계 대비 전환율(%)": ratio(total_purchase, total_survey)},
 ]
 
 df_funnel = pd.DataFrame(funnel_data)
@@ -109,6 +108,8 @@ st.dataframe(df_funnel, width="stretch")
 
 st.bar_chart(df_funnel.set_index("단계")["세션 수"])
 st.markdown("---")
+
+
 
 # 체류시간 분포
 st.subheader("설문 완료 → 통계 페이지 진입까지 소요 시간 분포 (초 단위)")

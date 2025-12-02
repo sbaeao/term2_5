@@ -767,8 +767,10 @@ if submitted:
 
     with st.expander("🔎 추천 결과에 영향을 준 요소(카테고리별 점수) 보기"):
         st.write(scores)
-    #st.button("지금 주문하러 가기", on_click=lambda: webbrowser.open_new_tab("https://www.liquormate.co.kr/"))
-    st.button("지금 주문하러 가기", disabled=True)
+    go_purchase = st.button("지금 주문하러 가기")
+    if go_purchase:
+        log_event("purchase_clicked")
+        #webbrowser.open_new_tab("https://www.liquormate.co.kr/")
     st.markdown("---")
     st.markdown(
         """
