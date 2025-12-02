@@ -709,30 +709,6 @@ def save_result(companion, mood, abv, taste_pref, food, recommended):
 
     df_all.to_csv(CSV_PATH, index=False)
 
-
-if submitted:
-    recommended, scores = recommend_drink(
-        companion, mood, abv, taste_pref, food
-    )
-    save_result(companion, mood, abv, taste_pref, food, recommended)
-    log_event("survey_completed")
-    st.success("✨ 설문이 완료되었습니다. 오늘 당신에게 어울리는 한 잔은…")
-
-    get_recommendation_copy(recommended)
-    #st.markdown(f"## {title}")
-    #st.markdown(desc)
-
-    with st.expander("🔎 추천 결과에 영향을 준 요소(카테고리별 점수) 보기"):
-        st.write(scores)
-
-    st.markdown("---")
-    st.markdown(
-        """
-이제 **생명의물 메인 페이지**에서  
-추천받은 술 타입에 맞는 메뉴와 자리를 골라보세요.
-"""
-    )
-
     # 🔥 통계 버튼 스타일 (일반 st.button용)
 st.markdown(
     """
@@ -776,6 +752,31 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
+if submitted:
+    recommended, scores = recommend_drink(
+        companion, mood, abv, taste_pref, food
+    )
+    save_result(companion, mood, abv, taste_pref, food, recommended)
+    log_event("survey_completed")
+    st.success("✨ 설문이 완료되었습니다. 오늘 당신에게 어울리는 한 잔은…")
+
+    get_recommendation_copy(recommended)
+    #st.markdown(f"## {title}")
+    #st.markdown(desc)
+
+    with st.expander("🔎 추천 결과에 영향을 준 요소(카테고리별 점수) 보기"):
+        st.write(scores)
+    #st.button("지금 주문하러 가기", on_click=lambda: webbrowser.open_new_tab("https://www.liquormate.co.kr/"))
+    st.button("지금 주문하러 가기")
+    st.markdown("---")
+    st.markdown(
+        """
+이제 **생명의물 메인 페이지**에서  
+추천받은 술 타입에 맞는 메뉴와 자리를 골라보세요.
+"""
+    )
+
 
 # 🔁 통계 페이지로 이동 (같은 세션에서)
 cols = st.columns([1, 2, 1])
