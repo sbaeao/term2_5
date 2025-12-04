@@ -55,7 +55,7 @@ log_event("home_viewed")
 # 사이드바
 # -----------------------------
 st.sidebar.title("🍶 생명의물")
-st.sidebar.markdown("취향 기반 술 추천 바")
+st.sidebar.markdown("LiqureMate")
 
 # -----------------------------
 # 메인 타이틀 섹션
